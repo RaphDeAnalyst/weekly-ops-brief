@@ -1,0 +1,7 @@
+task,owner,due_date,status,priority,blocker,since,waiting_on
+Supplier payment approval,Morgan Lee,2026-11-13,blocked,high,Invoice payment approval is pending,2026-11-10,
+Restock seasonal stock,Riley Chen,2026-11-15,waiting,high,,2026-11-13,Warehouse team
+Publish website update,Jordan Patel,2026-11-20,blocked,medium,Awaiting final sign-off,2026-11-14,
+Print the launch flyer,Casey Brown,2026-11-14,blocked,medium,Supplier delivery date is unconfirmed,2026-11-09,
+Confirm vendor delivery,Taylor Kim,2026-11-18,waiting,low,Shipment confirmation requested,2026-11-11,Northstar supplier
+Review last week's results,Avery Brooks,2026-11-12,done,low,,2026-11-08,

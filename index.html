@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f5">
+  <title>Weekly Ops Brief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #17211d;
+      background: #f6f7f5;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --accent: #176b55;
+      --border: #d7ddd9;
+      --muted: #59645f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { margin: 0; padding: 32px 16px; }
+
+    main { width: min(100%, 820px); margin: 0 auto; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: .75rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -.045em; }
+    h2 { margin: 0 0 14px; font-size: 1.15rem; }
+
+    .intro { max-width: 62ch; color: var(--muted); line-height: 1.55; }
+
+    .panel {
+      margin-top: 24px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgb(23 33 29 / 4%);
+    }
+
+    .privacy {
+      margin: 0 0 18px;
+      padding: 10px 12px;
+      border-left: 3px solid var(--accent);
+      background: #f0f7f3;
+      font-size: .9rem;
+    }
+
+    label { display: block; margin-bottom: 7px; font-weight: 650; }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 210px;
+      padding: 12px;
+      border: 1px solid #aeb8b2;
+      border-radius: 8px;
+      font: 0.9rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+      resize: vertical;
+    }
+
+    textarea:focus-visible, input:focus-visible, button:focus-visible {
+      outline: 3px solid #86c3ad;
+      outline-offset: 2px;
+    }
+
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+    .actions[hidden] { display: none; }
+
+    button, .upload-label {
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .upload-label { display: inline-flex; align-items: center; }
+    input[type="file"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; }
+    #file-input:focus-visible + .upload-label { outline: 3px solid #86c3ad; outline-offset: 2px; }
+    .hint { margin: 12px 0 0; color: var(--muted); font-size: .86rem; }
+    .error { margin: 16px 0 0; color: #9b2828; font-weight: 650; }
+    .error:empty { display: none; }
+    .result { margin-top: 22px; }
+    .result[hidden] { display: none; }
+    .status-line { margin: 0 0 12px; color: var(--muted); }
+    .columns { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+    .columns li { padding: 5px 9px; border-radius: 999px; background: #edf2ef; font-size: .85rem; }
+    .columns li.missing { background: #fff0ef; color: #8d2924; }
+    .skipped { margin: 18px 0 0; padding-left: 22px; }
+    .skipped li { margin: 6px 0; }
+    .date-control { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+    .date-control label { margin: 0; }
+    input[type="date"] { min-height: 40px; padding: 7px 10px; border: 1px solid #aeb8b2; border-radius: 7px; font: inherit; }
+    button.secondary { background: #fff; color: var(--accent); }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    .action-status { min-height: 1.4em; margin: 10px 0 0; color: var(--muted); font-size: .9rem; }
+    .brief { margin-top: 24px; }
+    .brief[hidden] { display: none; }
+    .brief-header { padding: 20px; border-radius: 12px; background: #17211d; color: #fff; }
+    .brief-header .eyebrow { color: #91d3b8; }
+    .brief-header h2 { margin: 0; font-size: 1.7rem; }
+    .as-of-line { margin: 6px 0 0; color: #d7e1dc; }
+    .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 18px; }
+    .stat { padding: 10px 12px; border: 1px solid #dce2de; border-radius: 9px; background: #fff; color: #17211d; }
+    .stat strong { display: block; font-size: 1.35rem; }
+    .stat span { color: var(--muted); font-size: .75rem; }
+    .brief-section { margin-top: 14px; padding: 18px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+    .brief-section h3 { margin: 0 0 10px; font-size: 1.05rem; }
+    .brief-section ul { margin: 0; padding-left: 20px; }
+    .brief-section li { margin: 8px 0; line-height: 1.4; }
+    .section-empty { margin: 0; color: var(--muted); font-style: italic; }
+    .rule-label { color: var(--muted); font-size: .87rem; }
+
+    @media (max-width: 520px) {
+      body { padding: 22px 12px; }
+      .panel { padding: 16px; }
+      .actions { align-items: stretch; flex-direction: column; }
+      .actions > * { justify-content: center; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @page { size: A4 portrait; margin: 10mm; }
+
+    @media print {
+      body { padding: 0; background: #fff; font-size: 8pt; }
+      main { width: 100%; max-width: none; }
+      main > .eyebrow, main > h1 { display: none; }
+      .eyebrow { margin-bottom: 3px; font-size: 7pt; }
+      h1 { font-size: 23pt; }
+      .intro, .panel, .actions, .date-control, .action-status, .validation, #input-error { display: none !important; }
+      .brief { display: block !important; margin-top: 8px; }
+      .brief-header { padding: 10px 12px; border-radius: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .brief-header h2 { font-size: 15pt; }
+      .as-of-line { margin-top: 2px; }
+      .stats { grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; }
+      .stat { padding: 5px 7px; border-radius: 4px; }
+      .stat strong { font-size: 11pt; }
+      .stat span { font-size: 6.5pt; }
+      .brief-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
+      .brief-section { margin: 0; padding: 7px 9px; border-radius: 4px; break-inside: avoid; }
+      .brief-section:first-child { grid-column: 1 / -1; }
+      .brief-section h3 { margin-bottom: 4px; font-size: 9pt; }
+      .brief-section li { margin: 3px 0; line-height: 1.2; }
+      .brief-section ul { padding-left: 14px; }
+      .rule-label { font-size: 7pt; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Weekly operations</p>
+    <h1>Weekly Ops Brief</h1>
+    <p class="intro">Turn a task tracker export into a concise weekly brief that highlights what needs attention and what to do next.</p>
+
+    <section class="panel validation" aria-labelledby="input-heading">
+      <h2 id="input-heading">Import task tracker</h2>
+      <p class="privacy">Your data stays in your browser. Nothing is uploaded.</p>
+      <label for="csv-input">Paste CSV text</label>
+      <textarea id="csv-input" spellcheck="false" autocomplete="off" placeholder="task,owner,due_date,status&#10;Prepare launch plan,Avery,2026-11-20,in_progress"></textarea>
+      <div class="actions">
+        <button id="parse-button" type="button">Build weekly brief</button>
+        <input id="file-input" type="file" accept=".csv,text/csv">
+        <label class="upload-label" for="file-input">Upload .csv</label>
+        <button id="sample-button" class="secondary" type="button">Load sample data</button>
+        <button id="download-sample-button" class="secondary" type="button">Download sample CSV</button>
+      </div>
+      <div class="date-control">
+        <label for="as-of-date">As of</label>
+        <input id="as-of-date" type="date">
+      </div>
+      <p class="hint">Required columns: task, owner, due_date, status. Headers are case-insensitive; optional columns include priority, blocker, since, and waiting_on.</p>
+      <p id="input-error" class="error" role="alert" aria-live="polite"></p>
+    </section>
+
+    <section id="validation-result" class="panel result validation" aria-labelledby="result-heading" hidden>
+      <h2 id="result-heading">Validation results</h2>
+      <p id="result-summary" class="status-line" aria-live="polite"></p>
+      <h3>Columns found</h3>
+      <ul id="column-list" class="columns"></ul>
+      <div id="warnings-container" hidden>
+        <h3>Warnings</h3>
+        <ul id="warnings-list" class="skipped"></ul>
+      </div>
+      <div id="skipped-container" hidden>
+        <h3>Rows skipped</h3>
+        <ul id="skipped-list" class="skipped"></ul>
+      </div>
+    </section>
+
+    <div class="actions validation" id="brief-actions" hidden>
+      <button id="copy-button" type="button">Copy brief as text</button>
+      <button id="print-button" class="secondary" type="button">Print / Save as PDF</button>
+    </div>
+    <p id="action-status" class="action-status validation" role="status" aria-live="polite"></p>
+    <article id="brief" class="brief" aria-labelledby="brief-title" hidden>
+      <header class="brief-header">
+        <p class="eyebrow">Weekly operations</p>
+        <h2 id="brief-title">Weekly Ops Brief</h2>
+        <p id="brief-as-of" class="as-of-line"></p>
+        <div id="brief-stats" class="stats" aria-label="Task counts"></div>
+      </header>
+      <div id="brief-sections" class="brief-sections"></div>
+    </article>
+  </main>
+
+  <script>
+    "use strict";
+
+    const REQUIRED_COLUMNS = ["task", "owner", "due_date", "status"];
+    const OPTIONAL_COLUMNS = ["priority", "blocker", "since", "waiting_on"];
+    const VALID_STATUSES = ["todo", "in_progress", "blocked", "waiting", "done"];
+    const PRIORITY_POINTS = { high: 6, medium: 3, low: 0 };
+
+    const SUGGESTION_RULES = [
+      {
+        label: "Decision needed",
+        pattern: /approv|sign.?off|decision/i,
+        suggestion: "Escalate: a decision is needed from the leader."
+      },
+      {
+        label: "Funding or payment",
+        pattern: /budget|payment|fund|invoice|cash/i,
+        suggestion: "Escalate: funding or payment decision needed."
+      },
+      {
+        label: "Owner unavailable",
+        pattern: /away|leave|unavailable|sick|travel/i,
+        suggestion: "Reassign: the owner is unavailable."
+      },
+      {
+        label: "Vendor or delivery",
+        pattern: /vendor|supplier|delivery|shipment|courier/i,
+        suggestion: "Follow up with the vendor today and agree a firm new date."
+      },
+      {
+        label: "Stuck for 5+ days",
+        matches: (item) => item.daysStuck !== null && item.daysStuck >= 5,
+        suggestion: "Escalate: stuck for 5+ days."
+      },
+      {
+        label: "Overdue and blocked",
+        matches: (item) => item.isOverdue && item.status === "blocked",
+        suggestion: "Reschedule: reset the due date and tell stakeholders."
+      },
+      {
+        label: "Default follow-up",
+        matches: () => true,
+        suggestion: "Follow up with the owner today and ask for an unblock plan."
+      }
+    ];
+
+    function parseISODate(value) {
+      if (!isValidISODate(value)) {
+        return null;
+      }
+      const [year, month, day] = value.split("-").map(Number);
+      return Date.UTC(year, month - 1, day);
+    }
+
+    function daysBetween(startDate, endDate) {
+      const start = parseISODate(startDate);
+      const end = parseISODate(endDate);
+      return start === null || end === null ? null : Math.floor((end - start) / 86400000);
+    }
+
+    // Normalize tracker status and priority, and calculate date-based item properties.
+    function classify(row, asOfDate) {
+      const warnings = [];
+      const inputStatus = String(row.status || "").trim().toLowerCase();
+      const status = VALID_STATUSES.includes(inputStatus) ? inputStatus : "todo";
+      if (status !== inputStatus) {
+        warnings.push(`Unknown status "${inputStatus || "(blank)"}" treated as todo.`);
+      }
+
+      const inputPriority = String(row.priority || "").trim().toLowerCase();
+      const priority = Object.hasOwn(PRIORITY_POINTS, inputPriority) ? inputPriority : "medium";
+      const daysOverdue = Math.max(0, daysBetween(row.due_date, asOfDate) ?? 0);
+      const isOverdue = status !== "done" && daysOverdue > 0;
+      const daysStuck = (status === "blocked" || status === "waiting")
+        ? daysBetween(row.since, asOfDate)
+        : null;
+
+      return {
+        ...row,
+        status,
+        priority,
+        warnings,
+        daysOverdue,
+        isOverdue,
+        daysStuck
+      };
+    }
+
+    // Calculate the requested attention score, excluding completed work from overdue points.
+    function score(item) {
+      const overduePoints = item.status !== "done" && item.isOverdue
+        ? Math.min(item.daysOverdue * 2, 20)
+        : 0;
+      const blockedPoints = item.status === "blocked" && item.daysStuck !== null
+        ? Math.min(Math.max(item.daysStuck, 0) * 2, 20)
+        : 0;
+      return overduePoints
+        + blockedPoints
+        + PRIORITY_POINTS[item.priority]
+        + (item.status === "blocked" ? 4 : 0)
+        + (item.status === "waiting" ? 2 : 0);
+    }
+
+    // Return the first matching blocker/duration rule with its label for display.
+    function suggestNextStep(item) {
+      const blocker = String(item.blocker || "");
+      const rule = SUGGESTION_RULES.find((candidate) => {
+        if (candidate.pattern && candidate.pattern.test(blocker)) {
+          return true;
+        }
+        return candidate.matches ? candidate.matches(item) : false;
+      });
+      return { suggestion: rule.suggestion, rule: rule.label };
+    }
+
+    // Parse CSV records while preserving quoted delimiters and escaped quote characters.
+    function parseCSV(text) {
+      if (typeof text !== "string") {
+        throw new TypeError("CSV input must be text.");
+      }
+
+      const records = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+      let afterQuote = false;
+
+      for (let index = 0; index < text.length; index += 1) {
+        const character = text[index];
+
+        if (inQuotes) {
+          if (character === '"') {
+            if (text[index + 1] === '"') {
+              field += '"';
+              index += 1;
+            } else {
+              inQuotes = false;
+              afterQuote = true;
+            }
+          } else {
+            field += character;
+          }
+          continue;
+        }
+
+        if (afterQuote) {
+          if (character === "," || character === "\n" || character === "\r") {
+            afterQuote = false;
+          } else if (character === " " || character === "\t") {
+            continue;
+          } else {
+            throw new Error(`Unexpected character after a closing quote at character ${index + 1}.`);
+          }
+        }
+
+        if (character === '"') {
+          if (field.length !== 0) {
+            throw new Error(`Unexpected quote in an unquoted field at character ${index + 1}.`);
+          }
+          inQuotes = true;
+        } else if (character === ",") {
+          row.push(field);
+          field = "";
+        } else if (character === "\n" || character === "\r") {
+          row.push(field);
+          records.push(row);
+          row = [];
+          field = "";
+          if (character === "\r" && text[index + 1] === "\n") {
+            index += 1;
+          }
+        } else {
+          field += character;
+        }
+      }
+
+      if (inQuotes) {
+        throw new Error("CSV contains a quoted field that was not closed.");
+      }
+
+      if (field.length > 0 || row.length > 0 || afterQuote) {
+        row.push(field);
+        records.push(row);
+      }
+
+      return records.filter((record) => !(record.length === 1 && record[0] === ""));
+    }
+
+    function isValidISODate(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+      }
+      const [year, month, day] = value.split("-").map(Number);
+      const parsed = new Date(Date.UTC(year, month - 1, day));
+      return parsed.getUTCFullYear() === year
+        && parsed.getUTCMonth() === month - 1
+        && parsed.getUTCDate() === day;
+    }
+
+    // Validate headers and rows, returning structured records and explicit skip reasons.
+    function validateCSV(text) {
+      const records = parseCSV(text);
+      if (records.length === 0) {
+        return { headers: [], rows: [], rowNumbers: [], skipped: [], errors: ["CSV is empty."] };
+      }
+
+      const headers = records[0].map((header) => header.trim().toLowerCase());
+      const errors = [];
+      const seen = new Set();
+      headers.forEach((header) => {
+        if (header && seen.has(header)) {
+          errors.push(`Duplicate column header: "${header}".`);
+        }
+        if (header) {
+          seen.add(header);
+        }
+      });
+
+      const missing = REQUIRED_COLUMNS.filter((column) => !headers.includes(column));
+      if (missing.length > 0) {
+        errors.push(`Missing required columns: ${missing.join(", ")}.`);
+        return { headers, rows: [], rowNumbers: [], skipped: [], errors };
+      }
+
+      const rows = [];
+      const rowNumbers = [];
+      const skipped = [];
+      records.slice(1).forEach((values, index) => {
+        const rowNumber = index + 2;
+        if (values.every((value) => value.trim() === "")) {
+          return;
+        }
+
+        const row = {};
+        headers.forEach((header, columnIndex) => {
+          if (header && row[header] === undefined) {
+            row[header] = (values[columnIndex] ?? "").trim();
+          }
+        });
+
+        const reasons = [];
+        if (!row.task) {
+          reasons.push("task is empty");
+        }
+        if (!isValidISODate(row.due_date || "")) {
+          reasons.push("due_date must be a valid YYYY-MM-DD date");
+        }
+        if (row.since && !isValidISODate(row.since)) {
+          reasons.push("since must be a valid YYYY-MM-DD date");
+        }
+
+        if (reasons.length > 0) {
+          skipped.push({ rowNumber, reason: reasons.join("; ") });
+          return;
+        }
+
+        REQUIRED_COLUMNS.concat(OPTIONAL_COLUMNS).forEach((column) => {
+          if (row[column] === undefined) {
+            row[column] = "";
+          }
+        });
+        rows.push(row);
+        rowNumbers.push(rowNumber);
+      });
+
+      return { headers, rows, rowNumbers, skipped, errors };
+    }
+
+    // Build the brief data model without touching the DOM, so the results stay testable.
+    function renderBrief(rows, asOfDate) {
+      const items = rows.map((row) => {
+        const item = classify(row, asOfDate);
+        return { ...item, attentionScore: score(item) };
+      });
+      const openItems = items.filter((item) => item.status !== "done");
+      const overdueItems = openItems
+        .filter((item) => item.isOverdue)
+        .sort((left, right) => right.daysOverdue - left.daysOverdue || left.task.localeCompare(right.task));
+      const blockedItems = openItems
+        .filter((item) => item.status === "blocked")
+        .sort((left, right) => {
+          if (left.daysStuck === null) {
+            return right.daysStuck === null ? left.task.localeCompare(right.task) : 1;
+          }
+          if (right.daysStuck === null) {
+            return -1;
+          }
+          return right.daysStuck - left.daysStuck || left.task.localeCompare(right.task);
+        });
+      const waitingItems = openItems.filter((item) => item.status === "waiting");
+      const attentionItems = [...openItems]
+        .sort((left, right) => right.attentionScore - left.attentionScore || left.task.localeCompare(right.task))
+        .slice(0, 3);
+
+      return {
+        asOfDate,
+        items,
+        attentionItems,
+        overdueItems,
+        blockedItems,
+        waitingItems,
+        counts: {
+          open: openItems.length,
+          overdue: overdueItems.length,
+          blocked: blockedItems.length,
+          waiting: waitingItems.length,
+          completed: items.filter((item) => item.status === "done").length
+        }
+      };
+    }
+
+    const csvInput = document.querySelector("#csv-input");
+    const inputError = document.querySelector("#input-error");
+    const results = document.querySelector("#validation-result");
+    const resultSummary = document.querySelector("#result-summary");
+    const columnList = document.querySelector("#column-list");
+    const warningsContainer = document.querySelector("#warnings-container");
+    const warningsList = document.querySelector("#warnings-list");
+    const skippedContainer = document.querySelector("#skipped-container");
+    const skippedList = document.querySelector("#skipped-list");
+    const asOfInput = document.querySelector("#as-of-date");
+    const brief = document.querySelector("#brief");
+    const briefActions = document.querySelector("#brief-actions");
+    const actionStatus = document.querySelector("#action-status");
+    const statsContainer = document.querySelector("#brief-stats");
+    const sectionsContainer = document.querySelector("#brief-sections");
+    let currentBrief = null;
+    let currentRows = [];
+
+    function localToday() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function addDaysToToday(offset) {
+      const date = new Date();
+      date.setHours(12, 0, 0, 0);
+      date.setDate(date.getDate() + offset);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? "");
+      return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    }
+
+    function buildSampleCSV() {
+      const rows = [
+        ["Supplier payment approval", "Morgan Lee", -3, "blocked", "high", "Invoice payment approval is pending", -6, ""],
+        ["Restock seasonal stock", "Riley Chen", -1, "waiting", "high", "", -3, "Warehouse team"],
+        ["Publish website update", "Jordan Patel", 4, "blocked", "medium", "Awaiting final sign-off", -2, ""],
+        ["Print the launch flyer", "Casey Brown", -2, "blocked", "medium", "Supplier delivery date is unconfirmed", -7, ""],
+        ["Confirm vendor delivery", "Taylor Kim", 2, "waiting", "low", "Shipment confirmation requested", -5, "Northstar supplier"],
+        ["Review last week's results", "Avery Brooks", -4, "done", "low", "", -8, ""]
+      ];
+      const header = ["task", "owner", "due_date", "status", "priority", "blocker", "since", "waiting_on"];
+      const csvRows = [header, ...rows.map(([task, owner, dueOffset, status, priority, blocker, sinceOffset, waitingOn]) => [
+        task,
+        owner,
+        addDaysToToday(dueOffset),
+        status,
+        priority,
+        blocker,
+        addDaysToToday(sinceOffset),
+        waitingOn
+      ])];
+      return csvRows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+    }
+
+    function clearElement(element) {
+      while (element.firstChild) {
+        element.removeChild(element.firstChild);
+      }
+    }
+
+    function appendText(parent, tagName, text, className = "") {
+      const element = document.createElement(tagName);
+      element.textContent = text;
+      if (className) {
+        element.className = className;
+      }
+      parent.appendChild(element);
+      return element;
+    }
+
+    function attentionReason(item) {
+      const duration = (days) => `${days} day${days === 1 ? "" : "s"}`;
+      if (item.status === "blocked") {
+        const stuckDuration = item.daysStuck === null ? "unknown" : duration(item.daysStuck);
+        const overdueDetail = item.isOverdue ? `, overdue ${duration(item.daysOverdue)}` : "";
+        return `blocked ${stuckDuration} (${item.blocker || "No blocker details provided"})${overdueDetail}. ${suggestNextStep(item).suggestion}`;
+      }
+      if (item.status === "waiting") {
+        const waitingOn = item.waiting_on || "someone else";
+        return `Waiting on ${waitingOn}${item.daysStuck === null ? "" : ` for ${duration(item.daysStuck)}`}.`;
+      }
+      if (item.isOverdue) {
+        return `Overdue by ${duration(item.daysOverdue)}; due ${item.due_date}.`;
+      }
+      if (item.priority === "high") {
+        return `High priority; due ${item.due_date}.`;
+      }
+      return `${item.status === "in_progress" ? "In progress; " : ""}Due ${item.due_date}.`;
+    }
+
+    function appendListSection(title, items, renderItem) {
+      const section = document.createElement("section");
+      section.className = "brief-section";
+      section.setAttribute("aria-label", title);
+      appendText(section, "h3", title);
+      if (items.length === 0) {
+        appendText(section, "p", "Nothing here", "section-empty");
+      } else {
+        const list = document.createElement("ul");
+        items.forEach((item) => renderItem(list, item));
+        section.appendChild(list);
+      }
+      sectionsContainer.appendChild(section);
+    }
+
+    function renderBriefToPage(model) {
+      clearElement(statsContainer);
+      clearElement(sectionsContainer);
+      document.querySelector("#brief-as-of").textContent = `As of ${model.asOfDate}`;
+
+      [
+        ["Open", model.counts.open],
+        ["Overdue", model.counts.overdue],
+        ["Blocked", model.counts.blocked],
+        ["Waiting", model.counts.waiting],
+        ["Completed", model.counts.completed]
+      ].forEach(([label, count]) => {
+        const stat = document.createElement("div");
+        stat.className = "stat";
+        appendText(stat, "strong", String(count));
+        appendText(stat, "span", label);
+        statsContainer.appendChild(stat);
+      });
+
+      appendListSection("Needs your attention", model.attentionItems, (list, item) => {
+        const entry = document.createElement("li");
+        appendText(entry, "strong", item.task);
+        const separator = item.status === "blocked" ? ", " : " — ";
+        entry.appendChild(document.createTextNode(`${separator}${item.owner || "Unassigned"}: ${attentionReason(item)}`));
+        list.appendChild(entry);
+      });
+      appendListSection("Overdue", model.overdueItems, (list, item) => {
+        const entry = document.createElement("li");
+        appendText(entry, "strong", item.task);
+        const duration = `${item.daysOverdue} day${item.daysOverdue === 1 ? "" : "s"}`;
+        entry.appendChild(document.createTextNode(` — ${item.owner || "Unassigned"}; due ${item.due_date} (${duration} overdue).`));
+        list.appendChild(entry);
+      });
+      appendListSection("Blocked", model.blockedItems, (list, item) => {
+        const entry = document.createElement("li");
+        appendText(entry, "strong", item.task);
+        const stuckDuration = item.daysStuck === null ? "unknown" : `${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
+        entry.appendChild(document.createTextNode(` — ${item.owner || "Unassigned"}. Blocker: ${item.blocker || "No details provided"}. Stuck: ${stuckDuration}. `));
+        const nextStep = suggestNextStep(item);
+        entry.appendChild(document.createTextNode(nextStep.suggestion + " "));
+        appendText(entry, "span", `Rule: ${nextStep.rule}`, "rule-label");
+        list.appendChild(entry);
+      });
+      appendListSection("Waiting on others", model.waitingItems, (list, item) => {
+        const entry = document.createElement("li");
+        appendText(entry, "strong", item.task);
+        const waitingDuration = item.daysStuck === null ? "unknown" : `${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
+        entry.appendChild(document.createTextNode(` — ${item.owner || "Unassigned"}; waiting on ${item.waiting_on || "not specified"} for ${waitingDuration}.`));
+        list.appendChild(entry);
+      });
+    }
+
+    function briefAsText(model) {
+      const sections = [
+        ["Needs your attention", model.attentionItems.map((item) => {
+          const separator = item.status === "blocked" ? ", " : " — ";
+          return `- ${item.task}${separator}${item.owner || "Unassigned"}: ${attentionReason(item)}`;
+        })],
+        ["Overdue", model.overdueItems.map((item) => `- ${item.task} — ${item.owner || "Unassigned"}; due ${item.due_date} (${item.daysOverdue} day${item.daysOverdue === 1 ? "" : "s"} overdue).`)],
+        ["Blocked", model.blockedItems.map((item) => {
+          const nextStep = suggestNextStep(item);
+          const stuckDuration = item.daysStuck === null ? "unknown" : `${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
+          return `- ${item.task} — ${item.owner || "Unassigned"}. Blocker: ${item.blocker || "No details provided"}. Stuck: ${stuckDuration}. ${nextStep.suggestion} Rule: ${nextStep.rule}`;
+        })],
+        ["Waiting on others", model.waitingItems.map((item) => {
+          const waitingDuration = item.daysStuck === null ? "unknown" : `${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
+          return `- ${item.task} — ${item.owner || "Unassigned"}; waiting on ${item.waiting_on || "not specified"} for ${waitingDuration}.`;
+        })]
+      ];
+      const counts = `Open: ${model.counts.open} | Overdue: ${model.counts.overdue} | Blocked: ${model.counts.blocked} | Waiting: ${model.counts.waiting} | Completed: ${model.counts.completed}`;
+      return [`WEEKLY OPS BRIEF — As of ${model.asOfDate}`, counts, ...sections.flatMap(([title, lines]) => [
+        "",
+        title,
+        ...(lines.length ? lines : ["Nothing here"])
+      ])].join("\n");
+    }
+
+    function renderValidation(result) {
+      clearElement(columnList);
+      clearElement(warningsList);
+      clearElement(skippedList);
+      inputError.textContent = result.errors.join(" ");
+      results.hidden = result.errors.length > 0;
+      if (results.hidden) {
+        return;
+      }
+
+      result.headers.forEach((header) => {
+        const item = document.createElement("li");
+        item.textContent = header || "(blank header)";
+        if (REQUIRED_COLUMNS.includes(header)) {
+          item.textContent += " — required";
+        } else if (OPTIONAL_COLUMNS.includes(header)) {
+          item.textContent += " — optional";
+        }
+        columnList.appendChild(item);
+      });
+
+      resultSummary.textContent = `${result.rows.length} valid task${result.rows.length === 1 ? "" : "s"} found.`;
+      let warningCount = 0;
+      result.rows.forEach((row, index) => {
+        classify(row, asOfInput.value).warnings.forEach((warning) => {
+          warningCount += 1;
+          appendText(warningsList, "li", `Row ${result.rowNumbers[index]}: ${warning}`);
+        });
+      });
+      warningsContainer.hidden = warningCount === 0;
+      skippedContainer.hidden = result.skipped.length === 0;
+      result.skipped.forEach((entry) => {
+        appendText(skippedList, "li", `Row ${entry.rowNumber}: ${entry.reason}.`);
+      });
+    }
+
+    function validateInput() {
+      inputError.textContent = "";
+      actionStatus.textContent = "";
+      try {
+        if (!isValidISODate(asOfInput.value)) {
+          throw new Error("Choose a valid As of date before building the brief.");
+        }
+        const result = validateCSV(csvInput.value);
+        renderValidation(result);
+        if (result.errors.length > 0) {
+          currentBrief = null;
+          brief.hidden = true;
+          briefActions.hidden = true;
+          return;
+        }
+        currentRows = result.rows;
+        currentBrief = renderBrief(currentRows, asOfInput.value);
+        renderBriefToPage(currentBrief);
+        brief.hidden = false;
+        briefActions.hidden = false;
+      } catch (error) {
+        results.hidden = true;
+        brief.hidden = true;
+        briefActions.hidden = true;
+        currentBrief = null;
+        inputError.textContent = error instanceof Error ? error.message : "Could not read the CSV.";
+      }
+    }
+
+    function downloadSample() {
+      const blob = new Blob([buildSampleCSV()], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "sample.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+
+    document.querySelector("#parse-button").addEventListener("click", validateInput);
+    document.querySelector("#sample-button").addEventListener("click", () => {
+      csvInput.value = buildSampleCSV();
+      validateInput();
+    });
+    document.querySelector("#download-sample-button").addEventListener("click", downloadSample);
+    document.querySelector("#print-button").addEventListener("click", () => window.print());
+    document.querySelector("#copy-button").addEventListener("click", async () => {
+      if (!currentBrief) {
+        actionStatus.textContent = "Build a brief before copying.";
+        return;
+      }
+      try {
+        const text = briefAsText(currentBrief);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const temporaryInput = document.createElement("textarea");
+          temporaryInput.value = text;
+          temporaryInput.setAttribute("readonly", "");
+          temporaryInput.style.position = "fixed";
+          temporaryInput.style.opacity = "0";
+          document.body.appendChild(temporaryInput);
+          temporaryInput.select();
+          const copied = document.execCommand("copy");
+          temporaryInput.remove();
+          if (!copied) {
+            throw new Error("Clipboard access is unavailable in this browser.");
+          }
+        }
+        actionStatus.textContent = "Brief copied to clipboard.";
+      } catch (error) {
+        actionStatus.textContent = error instanceof Error
+          ? `Could not copy brief: ${error.message}`
+          : "Could not copy brief. Clipboard access is unavailable.";
+      }
+    });
+    asOfInput.addEventListener("change", () => {
+      if (csvInput.value.trim()) {
+        validateInput();
+      }
+    });
+    document.querySelector("#file-input").addEventListener("change", async (event) => {
+      const [file] = event.currentTarget.files;
+      if (!file) {
+        return;
+      }
+      try {
+        csvInput.value = await file.text();
+        validateInput();
+      } catch (error) {
+        results.hidden = true;
+        brief.hidden = true;
+        briefActions.hidden = true;
+        inputError.textContent = error instanceof Error ? `Could not read file: ${error.message}` : "Could not read the selected file.";
+      }
+    });
+    asOfInput.value = localToday();
+
+    // Keep small deterministic checks available in developer tools without external test code.
+    function runSelfTests() {
+      console.assert(parseCSV('task,owner\r\n"Prep, review",Sam')[1][0] === "Prep, review", "CSV parser should preserve quoted commas.");
+      console.assert(daysBetween("2026-11-10", "2026-11-16") === 6, "Overdue day calculation should use calendar days.");
+      console.assert(suggestNextStep({ blocker: "Supplier invoice approval", status: "blocked", isOverdue: true, daysStuck: 8 }).rule === "Decision needed", "First matching blocker rule should win.");
+      const blockedDisplay = renderBrief([{
+        task: "Blocked task",
+        owner: "Alex",
+        due_date: "2026-11-20",
+        status: "blocked",
+        priority: "medium",
+        blocker: "vendor delay",
+        since: "2026-11-13"
+      }], "2026-11-16");
+      console.assert(attentionReason(blockedDisplay.attentionItems[0]) === "blocked 3 days (vendor delay). Follow up with the vendor today and agree a firm new date.", "Blocked attention reason should show blocker, stuck days, and the suggested next step.");
+      const overdueBlocked = renderBrief([{
+        task: "Reprint price list",
+        owner: "Ife",
+        due_date: "2026-11-09",
+        status: "blocked",
+        priority: "medium",
+        blocker: "Printer queue is full",
+        since: "2026-11-09"
+      }], "2026-11-16").attentionItems[0];
+      console.assert(attentionReason(overdueBlocked) === "blocked 7 days (Printer queue is full), overdue 7 days. Escalate: stuck for 5+ days.", "Overdue blocked attention should include blocker, stuck and overdue days, and the suggestion.");
+      const blockedOrder = renderBrief([
+        { task: "Unknown", owner: "A", due_date: "2026-11-20", status: "blocked" },
+        { task: "Short", owner: "A", due_date: "2026-11-20", status: "blocked", since: "2026-11-15" },
+        { task: "Long", owner: "A", due_date: "2026-11-20", status: "blocked", since: "2026-11-10" }
+      ], "2026-11-16").blockedItems.map((item) => item.task).join(",");
+      console.assert(blockedOrder === "Long,Short,Unknown", "Blocked section should sort by stuck days descending with unknown last.");
+    }
+    runSelfTests();
+  </script>
+</body>
+</html>
