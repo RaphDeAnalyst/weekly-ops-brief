@@ -29,7 +29,7 @@ Headers are trimmed and case-insensitive. Required headers must be present. Date
 
 CSV fields may be quoted; quoted commas, escaped quotes (`""`), and CRLF line endings are supported. A non-empty invalid `since` date also causes the row to be skipped. Blank lines are ignored. Extra columns are ignored.
 
-The **Load sample data** button generates example dates relative to today. The included `sample.csv` is a downloadable-style static example dated November 16, 2026.
+The **Load sample data** and **Download sample CSV** buttons use the same bundled fixture as `sample.csv`. The fixture includes the expected waiting-duration examples and rule/validation test rows. The app keeps an inline copy so it can load the fixture without making a network request; update both copies when changing the sample.
 
 ## Suggested next-step rules
 
