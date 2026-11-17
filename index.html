@@ -124,6 +124,14 @@
     .brief-section li { margin: 8px 0; line-height: 1.4; }
     .section-empty { margin: 0; color: var(--muted); font-style: italic; }
     .rule-label { color: var(--muted); font-size: .87rem; }
+    .attention-item { list-style: none; margin-left: -20px !important; padding: 9px 11px; border-left: 3px solid var(--accent); background: #f5f8f6; }
+    .attention-title { display: block; font-size: 1rem; }
+    .attention-meta, .attention-next { display: block; margin-top: 3px; }
+    .attention-meta { color: var(--muted); font-size: .9rem; }
+    .attention-next { font-weight: 650; }
+    .skipped-section { border-color: #e3c9c6; }
+    .skipped-section h3 { color: #8d2924; }
+    .print-summary { display: none; }
 
     @media (max-width: 520px) {
       body { padding: 22px 12px; }
@@ -133,30 +141,34 @@
       .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
-    @page { size: A4 portrait; margin: 10mm; }
+    @page { size: A4 portrait; margin: 11mm; }
 
     @media print {
-      body { padding: 0; background: #fff; font-size: 8pt; }
-      main { width: 100%; max-width: none; }
-      main > .eyebrow, main > h1 { display: none; }
-      .eyebrow { margin-bottom: 3px; font-size: 7pt; }
-      h1 { font-size: 23pt; }
-      .intro, .panel, .actions, .date-control, .action-status, .validation, #input-error { display: none !important; }
-      .brief { display: block !important; margin-top: 8px; }
-      .brief-header { padding: 10px 12px; border-radius: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .brief-header h2 { font-size: 15pt; }
-      .as-of-line { margin-top: 2px; }
-      .stats { grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; }
-      .stat { padding: 5px 7px; border-radius: 4px; }
-      .stat strong { font-size: 11pt; }
-      .stat span { font-size: 6.5pt; }
-      .brief-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
-      .brief-section { margin: 0; padding: 7px 9px; border-radius: 4px; break-inside: avoid; }
-      .brief-section:first-child { grid-column: 1 / -1; }
-      .brief-section h3 { margin-bottom: 4px; font-size: 9pt; }
-      .brief-section li { margin: 3px 0; line-height: 1.2; }
-      .brief-section ul { padding-left: 14px; }
-      .rule-label { font-size: 7pt; }
+      html, body { width: auto; min-height: 0; margin: 0; padding: 0; background: #fff; color: #17211d; font-size: 9pt; }
+      main { width: 100%; max-width: none; margin: 0; padding: 0; }
+      main > *:not(#print-summary) { display: none !important; }
+      #print-summary[hidden] { display: none !important; }
+      #print-summary { display: block !important; color: #17211d; font-size: 9pt; line-height: 1.3; }
+      .print-header { padding: 5mm 6mm 4mm; border-top: 3mm solid var(--accent); background: #f3f6f4 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .print-header h1 { margin: 0; font-size: 19pt; letter-spacing: -.03em; }
+      .print-date { margin: 1mm 0 0; color: #45534c; font-size: 9pt; }
+      .print-metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2mm; margin-top: 4mm; }
+      .print-metric { padding: 2mm; border-left: .7mm solid var(--accent); background: #fff; break-inside: avoid; }
+      .print-metric strong { display: block; font-size: 13pt; line-height: 1.1; }
+      .print-metric span { color: #45534c; font-size: 7.5pt; }
+      .print-section { margin-top: 4mm; break-inside: avoid; page-break-inside: avoid; }
+      .print-section h2 { margin: 0 0 1.5mm; padding-bottom: 1mm; border-bottom: .35mm solid #aeb8b2; font-size: 11pt; break-after: avoid; page-break-after: avoid; }
+      .print-attention { display: grid; grid-template-columns: 1fr; gap: 1mm; margin: 0; padding: 0; list-style: none; }
+      .print-attention-item { padding: 1.5mm 2mm; border-left: 1mm solid var(--accent); background: #f5f8f6; break-inside: avoid; page-break-inside: avoid; }
+      .print-task-title { display: block; font-size: 9.5pt; font-weight: 750; }
+      .print-task-detail { display: block; margin-top: .5mm; }
+      .print-task-next { display: block; margin-top: .5mm; font-size: 8.5pt; font-weight: 650; }
+      .print-lists { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 0 6mm; }
+      .print-lists .print-section { min-width: 0; }
+      .print-list { margin: 0; padding-left: 4mm; }
+      .print-list li { margin: 1mm 0; font-size: 9pt; line-height: 1.25; overflow-wrap: anywhere; break-inside: avoid; page-break-inside: avoid; }
+      .print-omitted { margin: 1mm 0 0; color: #45534c; font-size: 8pt; font-style: italic; }
+      .print-empty { margin: 0; color: #45534c; font-style: italic; }
     }
   </style>
 </head>
@@ -195,10 +207,6 @@
         <h3>Warnings</h3>
         <ul id="warnings-list" class="skipped"></ul>
       </div>
-      <div id="skipped-container" hidden>
-        <h3>Rows skipped</h3>
-        <ul id="skipped-list" class="skipped"></ul>
-      </div>
     </section>
 
     <div class="actions validation" id="brief-actions" hidden>
@@ -215,6 +223,7 @@
       </header>
       <div id="brief-sections" class="brief-sections"></div>
     </article>
+    <article id="print-summary" class="print-summary" aria-label="Weekly operations print summary" hidden></article>
   </main>
 
   <script>
@@ -268,7 +277,10 @@
         return null;
       }
       const [year, month, day] = value.split("-").map(Number);
-      return Date.UTC(year, month - 1, day);
+      const date = new Date(0);
+      date.setUTCHours(0, 0, 0, 0);
+      date.setUTCFullYear(year, month - 1, day);
+      return date.getTime();
     }
 
     function daysBetween(startDate, endDate) {
@@ -410,17 +422,19 @@
         return false;
       }
       const [year, month, day] = value.split("-").map(Number);
-      const parsed = new Date(Date.UTC(year, month - 1, day));
+      const parsed = new Date(0);
+      parsed.setUTCHours(0, 0, 0, 0);
+      parsed.setUTCFullYear(year, month - 1, day);
       return parsed.getUTCFullYear() === year
         && parsed.getUTCMonth() === month - 1
         && parsed.getUTCDate() === day;
     }
 
-    // Validate headers and rows, returning structured records and explicit skip reasons.
+    // Validate each row before exposing it as valid input to the brief pipeline.
     function validateCSV(text) {
       const records = parseCSV(text);
       if (records.length === 0) {
-        return { headers: [], rows: [], rowNumbers: [], skipped: [], errors: ["CSV is empty."] };
+        return { headers: [], validRows: [], rowNumbers: [], skippedRows: [], errors: ["CSV is empty."] };
       }
 
       const headers = records[0].map((header) => header.trim().toLowerCase());
@@ -438,15 +452,22 @@
       const missing = REQUIRED_COLUMNS.filter((column) => !headers.includes(column));
       if (missing.length > 0) {
         errors.push(`Missing required columns: ${missing.join(", ")}.`);
-        return { headers, rows: [], rowNumbers: [], skipped: [], errors };
+      }
+      if (errors.length > 0) {
+        return { headers, validRows: [], rowNumbers: [], skippedRows: [], errors };
       }
 
-      const rows = [];
+      const validRows = [];
       const rowNumbers = [];
-      const skipped = [];
+      const skippedRows = [];
       records.slice(1).forEach((values, index) => {
         const rowNumber = index + 2;
         if (values.every((value) => value.trim() === "")) {
+          return;
+        }
+
+        if (values.length > headers.length) {
+          skippedRows.push({ rowNumber, reason: "row has more values than the header columns" });
           return;
         }
 
@@ -461,15 +482,21 @@
         if (!row.task) {
           reasons.push("task is empty");
         }
+        if (!row.owner) {
+          reasons.push("owner is empty");
+        }
         if (!isValidISODate(row.due_date || "")) {
           reasons.push("due_date must be a valid YYYY-MM-DD date");
+        }
+        if (!row.status) {
+          reasons.push("status is empty");
         }
         if (row.since && !isValidISODate(row.since)) {
           reasons.push("since must be a valid YYYY-MM-DD date");
         }
 
         if (reasons.length > 0) {
-          skipped.push({ rowNumber, reason: reasons.join("; ") });
+          skippedRows.push({ rowNumber, reason: reasons.join("; ") });
           return;
         }
 
@@ -478,16 +505,16 @@
             row[column] = "";
           }
         });
-        rows.push(row);
+        validRows.push(row);
         rowNumbers.push(rowNumber);
       });
 
-      return { headers, rows, rowNumbers, skipped, errors };
+      return { headers, validRows, rowNumbers, skippedRows, errors };
     }
 
     // Build the brief data model without touching the DOM, so the results stay testable.
-    function renderBrief(rows, asOfDate) {
-      const items = rows.map((row) => {
+    function renderBrief(validRows, asOfDate, skippedRows = []) {
+      const items = validRows.map((row) => {
         const item = classify(row, asOfDate);
         return { ...item, attentionScore: score(item) };
       });
@@ -506,13 +533,26 @@
           }
           return right.daysStuck - left.daysStuck || left.task.localeCompare(right.task);
         });
-      const waitingItems = openItems.filter((item) => item.status === "waiting");
+      const waitingItems = openItems
+        .map((item, inputIndex) => ({ item, inputIndex }))
+        .filter(({ item }) => item.status === "waiting")
+        .sort((left, right) => {
+          if (left.item.daysStuck === null) {
+            return right.item.daysStuck === null ? left.inputIndex - right.inputIndex : 1;
+          }
+          if (right.item.daysStuck === null) {
+            return -1;
+          }
+          return right.item.daysStuck - left.item.daysStuck || left.inputIndex - right.inputIndex;
+        })
+        .map(({ item }) => item);
       const attentionItems = [...openItems]
         .sort((left, right) => right.attentionScore - left.attentionScore || left.task.localeCompare(right.task))
         .slice(0, 3);
 
       return {
         asOfDate,
+        skippedRows,
         items,
         attentionItems,
         overdueItems,
@@ -535,16 +575,14 @@
     const columnList = document.querySelector("#column-list");
     const warningsContainer = document.querySelector("#warnings-container");
     const warningsList = document.querySelector("#warnings-list");
-    const skippedContainer = document.querySelector("#skipped-container");
-    const skippedList = document.querySelector("#skipped-list");
     const asOfInput = document.querySelector("#as-of-date");
     const brief = document.querySelector("#brief");
     const briefActions = document.querySelector("#brief-actions");
     const actionStatus = document.querySelector("#action-status");
     const statsContainer = document.querySelector("#brief-stats");
     const sectionsContainer = document.querySelector("#brief-sections");
+    const printSummary = document.querySelector("#print-summary");
     let currentBrief = null;
-    let currentRows = [];
 
     function localToday() {
       const date = new Date();
@@ -608,29 +646,164 @@
       return element;
     }
 
-    function attentionReason(item) {
+    function attentionDetails(item) {
       const duration = (days) => `${days} day${days === 1 ? "" : "s"}`;
+      const priority = `${item.priority[0].toUpperCase()}${item.priority.slice(1)} priority`;
       if (item.status === "blocked") {
         const stuckDuration = item.daysStuck === null ? "unknown" : duration(item.daysStuck);
-        const overdueDetail = item.isOverdue ? `, overdue ${duration(item.daysOverdue)}` : "";
-        return `blocked ${stuckDuration} (${item.blocker || "No blocker details provided"})${overdueDetail}. ${suggestNextStep(item).suggestion}`;
+        const parts = [];
+        if (item.isOverdue) {
+          parts.push(`${duration(item.daysOverdue)} overdue`);
+        }
+        parts.push(`blocked ${stuckDuration}${item.blocker ? ` (${item.blocker})` : ""}`, priority);
+        const nextStep = suggestNextStep(item);
+        return {
+          summary: parts.join(" · "),
+          next: `Next: ${nextStep.suggestion} (${nextStep.rule})`
+        };
       }
       if (item.status === "waiting") {
         const waitingOn = item.waiting_on || "someone else";
-        return `Waiting on ${waitingOn}${item.daysStuck === null ? "" : ` for ${duration(item.daysStuck)}`}.`;
+        const waitDuration = item.daysStuck === null ? "unknown duration" : duration(item.daysStuck);
+        const nextStep = suggestNextStep(item);
+        return {
+          summary: `Waiting on ${waitingOn} · ${waitDuration} · ${priority}`,
+          next: `Next: ${nextStep.suggestion} (${nextStep.rule})`
+        };
       }
       if (item.isOverdue) {
-        return `Overdue by ${duration(item.daysOverdue)}; due ${item.due_date}.`;
+        const nextStep = suggestNextStep(item);
+        return {
+          summary: `${duration(item.daysOverdue)} overdue · ${priority}`,
+          next: `Next: ${nextStep.suggestion} (${nextStep.rule})`
+        };
       }
-      if (item.priority === "high") {
-        return `High priority; due ${item.due_date}.`;
+      const state = item.status === "in_progress" ? "In progress" : "Due";
+      const nextStep = suggestNextStep(item);
+      return {
+        summary: `${state} ${item.due_date} · ${priority}`,
+        next: `Next: ${nextStep.suggestion} (${nextStep.rule})`
+      };
+    }
+
+    // Apply print-only display limits to the browser model's already-ranked lists.
+    function selectPrintItems(model) {
+      return {
+        attentionItems: model.attentionItems.slice(0, 3),
+        overdueItems: model.overdueItems.slice(0, 5),
+        blockedItems: model.blockedItems.slice(0, 4),
+        waitingItems: model.waitingItems.slice(0, 3),
+        omitted: {
+          overdue: Math.max(0, model.overdueItems.length - 5),
+          blocked: Math.max(0, model.blockedItems.length - 4),
+          waiting: Math.max(0, model.waitingItems.length - 3)
+        }
+      };
+    }
+
+    function appendPrintSection(title, items, renderItem) {
+      const section = document.createElement("section");
+      section.className = "print-section";
+      appendText(section, "h2", title);
+      if (items.length === 0) {
+        appendText(section, "p", "Nothing here", "print-empty");
+      } else {
+        const list = document.createElement("ul");
+        list.className = title === "Needs Your Attention" ? "print-attention" : "print-list";
+        items.forEach((item) => renderItem(list, item));
+        section.appendChild(list);
       }
-      return `${item.status === "in_progress" ? "In progress; " : ""}Due ${item.due_date}.`;
+      return section;
+    }
+
+    function appendOmittedNote(section, count, label) {
+      if (count > 0) {
+        appendText(section, "p", `+ ${count} additional ${label} not shown.`, "print-omitted");
+      }
+    }
+
+    function renderPrintSummary(model) {
+      clearElement(printSummary);
+      printSummary.hidden = false;
+      const selected = selectPrintItems(model);
+      const header = document.createElement("header");
+      header.className = "print-header";
+      appendText(header, "h1", "WEEKLY OPS BRIEF");
+      appendText(header, "p", `Reporting date: ${model.asOfDate}`, "print-date");
+
+      const metrics = document.createElement("div");
+      metrics.className = "print-metrics";
+      [
+        ["Open tasks", model.counts.open],
+        ["Overdue tasks", model.counts.overdue],
+        ["Blocked tasks", model.counts.blocked],
+        ["Waiting tasks", model.counts.waiting],
+        ["Completed tasks", model.counts.completed]
+      ].forEach(([label, count]) => {
+        const metric = document.createElement("div");
+        metric.className = "print-metric";
+        appendText(metric, "strong", String(count));
+        appendText(metric, "span", label);
+        metrics.appendChild(metric);
+      });
+      header.appendChild(metrics);
+      printSummary.appendChild(header);
+
+      const attention = appendPrintSection("Needs Your Attention", selected.attentionItems, (list, item) => {
+        const entry = document.createElement("li");
+        entry.className = "print-attention-item";
+        const details = attentionDetails(item);
+        appendText(entry, "strong", `${item.task} — ${item.owner || "Unassigned"}`, "print-task-title");
+        appendText(entry, "span", details.summary, "print-task-detail");
+        if (details.next) {
+          appendText(entry, "span", details.next, "print-task-next");
+        }
+        list.appendChild(entry);
+      });
+      printSummary.appendChild(attention);
+
+      const supportingSections = document.createElement("div");
+      supportingSections.className = "print-lists";
+      const overdue = appendPrintSection("Overdue", selected.overdueItems, (list, item) => {
+        const entry = document.createElement("li");
+        const days = `${item.daysOverdue} day${item.daysOverdue === 1 ? "" : "s"} overdue`;
+        entry.textContent = `${item.task} — ${item.owner || "Unassigned"} · ${days}`;
+        list.appendChild(entry);
+      });
+      appendOmittedNote(overdue, selected.omitted.overdue, "overdue tasks");
+      supportingSections.appendChild(overdue);
+
+      const blocked = appendPrintSection("Blocked", selected.blockedItems, (list, item) => {
+        const entry = document.createElement("li");
+        const duration = item.daysStuck === null
+          ? "blocked for an unknown duration"
+          : `blocked ${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
+        const nextStep = suggestNextStep(item);
+        entry.textContent = `${item.task} — ${item.owner || "Unassigned"} · ${duration} · Next: ${nextStep.suggestion} (${nextStep.rule})`;
+        list.appendChild(entry);
+      });
+      appendOmittedNote(blocked, selected.omitted.blocked, "blocked tasks");
+      supportingSections.appendChild(blocked);
+
+      const waiting = appendPrintSection("Waiting on Others", selected.waitingItems, (list, item) => {
+        const entry = document.createElement("li");
+        const duration = item.daysStuck === null
+          ? "unknown duration"
+          : `${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
+        entry.textContent = `${item.task} — ${item.owner || "Unassigned"} · waiting on ${item.waiting_on || "not specified"} · ${duration}`;
+        list.appendChild(entry);
+      });
+      appendOmittedNote(waiting, selected.omitted.waiting, "waiting tasks");
+      supportingSections.appendChild(waiting);
+      printSummary.appendChild(supportingSections);
     }
 
     function appendListSection(title, items, renderItem) {
       const section = document.createElement("section");
       section.className = "brief-section";
+      if (title === "Rows skipped") {
+        section.classList.add("skipped-section");
+      }
       section.setAttribute("aria-label", title);
       appendText(section, "h3", title);
       if (items.length === 0) {
@@ -646,6 +819,7 @@
     function renderBriefToPage(model) {
       clearElement(statsContainer);
       clearElement(sectionsContainer);
+      renderPrintSummary(model);
       document.querySelector("#brief-as-of").textContent = `As of ${model.asOfDate}`;
 
       [
@@ -664,10 +838,15 @@
 
       appendListSection("Needs your attention", model.attentionItems, (list, item) => {
         const entry = document.createElement("li");
-        appendText(entry, "strong", item.task);
-        const separator = item.status === "blocked" ? ", " : " — ";
-        entry.appendChild(document.createTextNode(`${separator}${item.owner || "Unassigned"}: ${attentionReason(item)}`));
+        entry.className = "attention-item";
+        const details = attentionDetails(item);
+        appendText(entry, "strong", `${item.task} — ${item.owner || "Unassigned"}`, "attention-title");
+        appendText(entry, "span", details.summary, "attention-meta");
+        if (details.next) {
+          appendText(entry, "span", details.next, "attention-next");
+        }
         list.appendChild(entry);
+        return entry;
       });
       appendListSection("Overdue", model.overdueItems, (list, item) => {
         const entry = document.createElement("li");
@@ -675,6 +854,7 @@
         const duration = `${item.daysOverdue} day${item.daysOverdue === 1 ? "" : "s"}`;
         entry.appendChild(document.createTextNode(` — ${item.owner || "Unassigned"}; due ${item.due_date} (${duration} overdue).`));
         list.appendChild(entry);
+        return entry;
       });
       appendListSection("Blocked", model.blockedItems, (list, item) => {
         const entry = document.createElement("li");
@@ -685,6 +865,7 @@
         entry.appendChild(document.createTextNode(nextStep.suggestion + " "));
         appendText(entry, "span", `Rule: ${nextStep.rule}`, "rule-label");
         list.appendChild(entry);
+        return entry;
       });
       appendListSection("Waiting on others", model.waitingItems, (list, item) => {
         const entry = document.createElement("li");
@@ -692,14 +873,23 @@
         const waitingDuration = item.daysStuck === null ? "unknown" : `${item.daysStuck} day${item.daysStuck === 1 ? "" : "s"}`;
         entry.appendChild(document.createTextNode(` — ${item.owner || "Unassigned"}; waiting on ${item.waiting_on || "not specified"} for ${waitingDuration}.`));
         list.appendChild(entry);
+        return entry;
       });
+      if (model.skippedRows.length > 0) {
+        appendListSection("Rows skipped", model.skippedRows, (list, skippedRow) => {
+          const entry = document.createElement("li");
+          entry.textContent = `Row ${skippedRow.rowNumber}: ${skippedRow.reason}.`;
+          list.appendChild(entry);
+          return entry;
+        });
+      }
     }
 
     function briefAsText(model) {
       const sections = [
         ["Needs your attention", model.attentionItems.map((item) => {
-          const separator = item.status === "blocked" ? ", " : " — ";
-          return `- ${item.task}${separator}${item.owner || "Unassigned"}: ${attentionReason(item)}`;
+          const details = attentionDetails(item);
+          return `- ${item.task} — ${item.owner || "Unassigned"}: ${details.summary}${details.next ? `\n  ${details.next}` : ""}`;
         })],
         ["Overdue", model.overdueItems.map((item) => `- ${item.task} — ${item.owner || "Unassigned"}; due ${item.due_date} (${item.daysOverdue} day${item.daysOverdue === 1 ? "" : "s"} overdue).`)],
         ["Blocked", model.blockedItems.map((item) => {
@@ -712,6 +902,9 @@
           return `- ${item.task} — ${item.owner || "Unassigned"}; waiting on ${item.waiting_on || "not specified"} for ${waitingDuration}.`;
         })]
       ];
+      if (model.skippedRows.length > 0) {
+        sections.push(["Rows skipped", model.skippedRows.map((entry) => `- Row ${entry.rowNumber}: ${entry.reason}.`)]);
+      }
       const counts = `Open: ${model.counts.open} | Overdue: ${model.counts.overdue} | Blocked: ${model.counts.blocked} | Waiting: ${model.counts.waiting} | Completed: ${model.counts.completed}`;
       return [`WEEKLY OPS BRIEF — As of ${model.asOfDate}`, counts, ...sections.flatMap(([title, lines]) => [
         "",
@@ -723,7 +916,6 @@
     function renderValidation(result) {
       clearElement(columnList);
       clearElement(warningsList);
-      clearElement(skippedList);
       inputError.textContent = result.errors.join(" ");
       results.hidden = result.errors.length > 0;
       if (results.hidden) {
@@ -741,19 +933,15 @@
         columnList.appendChild(item);
       });
 
-      resultSummary.textContent = `${result.rows.length} valid task${result.rows.length === 1 ? "" : "s"} found.`;
+      resultSummary.textContent = `${result.validRows.length} valid task${result.validRows.length === 1 ? "" : "s"} found; ${result.skippedRows.length} skipped.`;
       let warningCount = 0;
-      result.rows.forEach((row, index) => {
+      result.validRows.forEach((row, index) => {
         classify(row, asOfInput.value).warnings.forEach((warning) => {
           warningCount += 1;
           appendText(warningsList, "li", `Row ${result.rowNumbers[index]}: ${warning}`);
         });
       });
       warningsContainer.hidden = warningCount === 0;
-      skippedContainer.hidden = result.skipped.length === 0;
-      result.skipped.forEach((entry) => {
-        appendText(skippedList, "li", `Row ${entry.rowNumber}: ${entry.reason}.`);
-      });
     }
 
     function validateInput() {
@@ -769,10 +957,10 @@
           currentBrief = null;
           brief.hidden = true;
           briefActions.hidden = true;
+          printSummary.hidden = true;
           return;
         }
-        currentRows = result.rows;
-        currentBrief = renderBrief(currentRows, asOfInput.value);
+        currentBrief = renderBrief(result.validRows, asOfInput.value, result.skippedRows);
         renderBriefToPage(currentBrief);
         brief.hidden = false;
         briefActions.hidden = false;
@@ -780,6 +968,7 @@
         results.hidden = true;
         brief.hidden = true;
         briefActions.hidden = true;
+        printSummary.hidden = true;
         currentBrief = null;
         inputError.textContent = error instanceof Error ? error.message : "Could not read the CSV.";
       }
@@ -851,6 +1040,7 @@
         results.hidden = true;
         brief.hidden = true;
         briefActions.hidden = true;
+        printSummary.hidden = true;
         inputError.textContent = error instanceof Error ? `Could not read file: ${error.message}` : "Could not read the selected file.";
       }
     });
@@ -858,9 +1048,22 @@
 
     // Keep small deterministic checks available in developer tools without external test code.
     function runSelfTests() {
-      console.assert(parseCSV('task,owner\r\n"Prep, review",Sam')[1][0] === "Prep, review", "CSV parser should preserve quoted commas.");
+      const quotedRecords = parseCSV('task,owner\r\n"Prep, review",Sam\r\n"Say ""hello""",Jo');
+      console.assert(quotedRecords[1][0] === "Prep, review", "CSV parser should preserve commas inside quoted fields.");
+      console.assert(quotedRecords[2][0] === 'Say "hello"', "CSV parser should preserve escaped double quotes.");
       console.assert(daysBetween("2026-11-10", "2026-11-16") === 6, "Overdue day calculation should use calendar days.");
-      console.assert(suggestNextStep({ blocker: "Supplier invoice approval", status: "blocked", isOverdue: true, daysStuck: 8 }).rule === "Decision needed", "First matching blocker rule should win.");
+      const ruleCases = [
+        [{ blocker: "Approval, invoice and supplier issue", status: "blocked", isOverdue: true, daysStuck: 8 }, "Decision needed"],
+        [{ blocker: "Payment pending", status: "blocked", isOverdue: false, daysStuck: 1 }, "Funding or payment"],
+        [{ blocker: "Owner is unavailable", status: "blocked", isOverdue: false, daysStuck: 1 }, "Owner unavailable"],
+        [{ blocker: "Supplier delivery delayed", status: "blocked", isOverdue: false, daysStuck: 1 }, "Vendor or delivery"],
+        [{ blocker: "No keyword", status: "waiting", isOverdue: false, daysStuck: 5 }, "Stuck for 5+ days"],
+        [{ blocker: "No keyword", status: "blocked", isOverdue: true, daysStuck: 1 }, "Overdue and blocked"],
+        [{ blocker: "No keyword", status: "todo", isOverdue: false, daysStuck: null }, "Default follow-up"]
+      ];
+      ruleCases.forEach(([item, expectedRule], index) => {
+        console.assert(suggestNextStep(item).rule === expectedRule, `Suggested-next-step rule case ${index + 1} should match in first-match order.`);
+      });
       const blockedDisplay = renderBrief([{
         task: "Blocked task",
         owner: "Alex",
@@ -870,7 +1073,7 @@
         blocker: "vendor delay",
         since: "2026-11-13"
       }], "2026-11-16");
-      console.assert(attentionReason(blockedDisplay.attentionItems[0]) === "blocked 3 days (vendor delay). Follow up with the vendor today and agree a firm new date.", "Blocked attention reason should show blocker, stuck days, and the suggested next step.");
+      console.assert(attentionDetails(blockedDisplay.attentionItems[0]).next.includes("Follow up with the vendor today") && attentionDetails(blockedDisplay.attentionItems[0]).next.includes("Vendor or delivery"), "Blocked attention should show the suggestion and matched rule.");
       const overdueBlocked = renderBrief([{
         task: "Reprint price list",
         owner: "Ife",
@@ -880,7 +1083,62 @@
         blocker: "Printer queue is full",
         since: "2026-11-09"
       }], "2026-11-16").attentionItems[0];
-      console.assert(attentionReason(overdueBlocked) === "blocked 7 days (Printer queue is full), overdue 7 days. Escalate: stuck for 5+ days.", "Overdue blocked attention should include blocker, stuck and overdue days, and the suggestion.");
+      console.assert(attentionDetails(overdueBlocked).summary === "7 days overdue · blocked 7 days (Printer queue is full) · Medium priority", "Blocked attention should summarize overdue, blocker, stuck duration, and priority.");
+      const invalidRows = validateCSV([
+        "task,owner,due_date,status,priority,blocker,since,waiting_on",
+        ",Jordan,2026-11-01,blocked,high,Empty task with blocker,2026-10-01,",
+        ",Jordan,2026-11-01,blocked,high,Empty task,2026-10-01,",
+        "Valid comma task,Jordan,2026-11-20,todo,low,,,"
+      ].join("\r\n"));
+      console.assert(invalidRows.validRows.length === 1 && invalidRows.validRows[0].task === "Valid comma task", "Invalid empty-task rows must be excluded from validRows.");
+      const invalidBrief = renderBrief(invalidRows.validRows, "2026-11-16", invalidRows.skippedRows);
+      console.assert(invalidBrief.items.length === 1 && invalidBrief.counts.open === 1 && invalidBrief.counts.overdue === 0 && invalidBrief.counts.blocked === 0, "Invalid rows must not affect classified items or brief counts.");
+      console.assert(invalidBrief.skippedRows.length === 2, "Invalid rows should be preserved only in skippedRows.");
+      const commaTask = validateCSV('task,owner,due_date,status\r\n"Restock, seasonal stock",Riley,2026-11-20,todo');
+      console.assert(commaTask.validRows[0].task === "Restock, seasonal stock", "Quoted comma-containing task names should validate intact.");
+      const unknownStatus = validateCSV("task,owner,due_date,status\r\nReview launch,Avery,2026-11-20,unrecognized");
+      const unknownStatusItem = classify(unknownStatus.validRows[0], "2026-11-16");
+      console.assert(unknownStatusItem.status === "todo" && unknownStatusItem.warnings.length === 1, "Unknown non-empty statuses should normalize to todo with a warning.");
+      console.assert(attentionDetails(unknownStatusItem).next.startsWith("Next: "), "Attention summaries should include a next action for unblocked tasks too.");
+      const selectionModel = renderBrief([
+        ...Array.from({ length: 8 }, (_, index) => ({
+          task: `Overdue ${index + 1}`,
+          owner: "Owner",
+          due_date: `2026-11-${String(8 + index).padStart(2, "0")}`,
+          status: "todo",
+          priority: "low"
+        })),
+        ...Array.from({ length: 6 }, (_, index) => ({
+          task: `Blocked ${index + 1}`,
+          owner: "Owner",
+          due_date: "2026-11-20",
+          status: "blocked",
+          priority: "medium",
+          since: `2026-11-${String(4 + index).padStart(2, "0")}`
+        })),
+        ...Array.from({ length: 5 }, (_, index) => ({
+          task: `Waiting ${index + 1}`,
+          owner: "Owner",
+          due_date: "2026-11-20",
+          status: "waiting",
+          priority: "low",
+          since: "2026-11-15",
+          waiting_on: "Team"
+        }))
+      ], "2026-11-16");
+      const printSelection = selectPrintItems(selectionModel);
+      console.assert(printSelection.attentionItems.length === 3 && printSelection.attentionItems[0].task === selectionModel.attentionItems[0].task, "Print attention items should preserve the browser's top-three score order.");
+      console.assert(printSelection.overdueItems.length === 5 && printSelection.overdueItems[0].task === "Overdue 1" && printSelection.omitted.overdue === 3, "Print overdue list should preserve most-overdue order and count omitted items.");
+      console.assert(printSelection.blockedItems.length === 4 && printSelection.blockedItems[0].task === "Blocked 1" && printSelection.omitted.blocked === 2, "Print blocked list should preserve existing stuck-day order and count omitted items.");
+      console.assert(printSelection.waitingItems.length === 3 && printSelection.omitted.waiting === 2, "Print waiting list should cap at three and count omitted items.");
+      const waitingOrder = renderBrief([
+        { task: "Equal wait first", owner: "Owner", due_date: "2026-11-20", status: "waiting", since: "2026-11-07" },
+        { task: "Unknown wait first", owner: "Owner", due_date: "2026-11-20", status: "waiting" },
+        { task: "Expected 10-day second", owner: "Owner", due_date: "2026-11-20", status: "waiting", since: "2026-11-07" },
+        { task: "Expected 12-day first", owner: "Owner", due_date: "2026-11-20", status: "waiting", since: "2026-11-05" },
+        { task: "Unknown wait second", owner: "Owner", due_date: "2026-11-20", status: "waiting" }
+      ], "2026-11-17").waitingItems.map((item) => item.task).join(",");
+      console.assert(waitingOrder === "Expected 12-day first,Equal wait first,Expected 10-day second,Unknown wait first,Unknown wait second", "Waiting tasks should sort by existing duration descending, keep ties stable, and place unknown durations last.");
       const blockedOrder = renderBrief([
         { task: "Unknown", owner: "A", due_date: "2026-11-20", status: "blocked" },
         { task: "Short", owner: "A", due_date: "2026-11-20", status: "blocked", since: "2026-11-15" },

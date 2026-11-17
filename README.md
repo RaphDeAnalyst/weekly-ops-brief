@@ -19,9 +19,9 @@ Headers are trimmed and case-insensitive. Required headers must be present. Date
 | Column | Required | Meaning / accepted values |
 |---|---:|---|
 | `task` | Yes | Task name; rows with an empty task are skipped. |
-| `owner` | Yes | Person responsible for the task. |
+| `owner` | Yes | Person responsible for the task; rows with an empty owner are skipped. |
 | `due_date` | Yes | Due date in `YYYY-MM-DD`; invalid dates cause that row to be skipped. |
-| `status` | Yes | `todo`, `in_progress`, `blocked`, `waiting`, or `done`. Unknown values are treated as `todo` and shown with a warning. |
+| `status` | Yes | `todo`, `in_progress`, `blocked`, `waiting`, or `done`. Empty values are skipped; unknown non-empty values are treated as `todo` and shown with a warning. |
 | `priority` | No | `high`, `medium`, or `low`; missing or unknown values default to `medium`. |
 | `blocker` | No | Blocker description used by the next-step rules. |
 | `since` | No | Date the item became blocked or waiting, in `YYYY-MM-DD`. |
@@ -70,7 +70,7 @@ All parsing and brief generation happen locally in your browser. The app makes n
 - Dates must use `YYYY-MM-DD`; locale-specific date formats are not interpreted.
 - This is a rule-based summary, not a project-management system. It cannot infer missing tracker context.
 - Empty owners are displayed as **Unassigned**; empty blocker and waiting-on details are identified as unspecified.
-- Printing is styled for one A4 portrait page for ordinary tracker sizes. Very large trackers or long descriptions may span additional pages.
+- Printing is styled as a compact A4 portrait executive brief. Long detail lists are capped in print with an omitted-item note; the full task lists remain available on screen.
 - Browser clipboard permissions vary; if copying is unavailable, the app reports the error.
 
 ## How it was built
